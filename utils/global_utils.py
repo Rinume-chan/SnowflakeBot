@@ -1,5 +1,5 @@
 import copy
-import pytz
+import secrets
 import random
 import colorsys
 import datetime
@@ -81,14 +81,19 @@ async def upload_hastebin(ctx_or_bot, content, url='https://mystb.in'):
     """
     bot = ctx_or_bot if isinstance(ctx_or_bot, commands.Bot) else ctx_or_bot.bot
     try:
-        async with bot.session.post(f'{url}/documents', data=content.encode('utf-8')) as post:
-            return f'{url}/{(await post.json())["key"]}'
+        password = secrets.token_urlsafe(8)
+        paste = await bot.mb_client.create_paste(
+            filename=f'traceback.py',
+            content=content,
+            password=password,
+        )
+        return f'{paste.url} Password: `{password}`'
     except:
         try:
             url = 'https://hastebin.com'
             async with bot.session.post(f'{url}/documents', data=content.encode('utf-8')) as post:
                 return f'{url}/{(await post.json())["key"]}'
-        except:
+        except Exception:
             traceback.print_exc()
 
 
@@ -107,18 +112,7 @@ async def send_or_hastebin(ctx, content, code=None, url='https://mystb.in'):
         await ctx.send(f'Output too long to send to discord, uploaded here instead: {hastebin_url}')
 
 
-async def get_user_timezone(ctx, user):
-    """
-    Returns a pytz.timezone for a user if set, returns None otherwise
-    """
-    query = '''SELECT tz
-               FROM timezones
-               WHERE "user" = $1;'''
-    record = await ctx.bot.pool.fetchrow(query, user.id)
-    if record is None:
-        return None
-    else:
-        return pytz.timezone(record.get('tz'))
+
 
 
 async def toggle_role(member, role):
