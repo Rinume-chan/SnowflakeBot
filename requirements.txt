@@ -3,7 +3,6 @@ discord.py[voice,speed]
 git+https://github.com/Rapptz/discord-ext-menus
 asyncpg
 jishaku
-wavelink
 parsedatetime
 python-dateutil
 tabulate
@@ -12,6 +11,6 @@ aenum
 rapidfuzz
 humanize
 psutil
-yt-dlp
 git+https://github.com/PythonistaGuild/mystbin.py
 lru-dict
+lxml
