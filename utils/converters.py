@@ -1,6 +1,5 @@
 import typing
 
-import pytz
 import discord
 
 from discord.ext import commands
@@ -99,19 +98,6 @@ class UserID(commands.Converter):
             raise commands.BadArgument('That is not a valid ID')
         except discord.NotFound:
             raise commands.BadArgument(f'Unable to find User with ID {argument}')
-
-
-class Timezone(commands.Converter):
-    async def convert(self, ctx, argument):
-        if argument.lower() in ('pst', 'pdt'):
-            argument = 'US/Pacific'
-
-        try:
-            tz = pytz.timezone(argument)
-        except pytz.UnknownTimeZoneError:
-            raise errors.TimezoneNotFound()
-
-        return tz
 
 
 class CaseInsensitiveTextChannel(commands.TextChannelConverter):
