@@ -14,7 +14,7 @@ class MetaCog(commands.Cog, name='Meta'):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='timeit')
+    @commands.command(name='timeit', hidden=True)
     async def _timeit(self, ctx: commands.Context, *, command_string: str):
         """
         Run a command timing execution and catching exceptions.
