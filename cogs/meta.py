@@ -91,7 +91,7 @@ class MetaCog(commands.Cog, name='Meta'):
         To display the source code of a subcommand you can separate it by
         periods or space eg. highlight.mention or highlight mention
         """
-        url = 'https://github.com/Willy-C/SnowflakeBot'
+        url = 'https://github.com/Rinume-chan/SnowflakeBot'
         branch = 'master'
         if command is None:
             return await ctx.send(url)
