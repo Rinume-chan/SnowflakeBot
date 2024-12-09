@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import json
 import datetime
 from itertools import groupby
-from typing import Union
+from typing import Union, Optional, TYPE_CHECKING
 
 import discord
 from discord.ext import commands
@@ -9,14 +11,17 @@ from discord.ext import commands
 from utils.global_utils import bright_color, upload_hastebin
 from utils.time import human_timedelta, format_dt
 from utils.converters import CaseInsensitiveMember, CachedUserID, MessageConverter, CaseInsensitiveTextChannel, CaseInsensitiveRole
+from utils.checks import has_permissions
 
+if TYPE_CHECKING:
+    from main import SnowflakeBot
+    from utils.context import Context
 
 class InfoCog(commands.Cog, name='Info'):
     def __init__(self, bot):
         self.bot = bot
 
-    @staticmethod
-    def fmt_dt(dt):
+    def fmt_dt(self, dt):
         if dt is None:
             return 'N/A'
         return f'{format_dt(dt, "f")} ({human_timedelta(dt)})'
@@ -46,7 +51,11 @@ class InfoCog(commands.Cog, name='Info'):
                        WHERE id = $1
                        AND changed_at < (CURRENT_DATE + $2::interval) ORDER BY changed_at;'''
             records = await self.bot.pool.fetch(query, user.id, datetime.timedelta(days=90))
-        fullnames = [f"{record['name']}#{record['discrim']}" if record['discrim'] is not None else record['name'] for record in records]
+
+        if records:
+            fullnames = [f"{record['name']}#{record['discrim']}" if record['discrim'] is not None else record['name'] for record in records]
+        else:
+            return
         return ', '.join(self.remove_consec_dupes(fullnames))
 
     async def get_global_names(self, user: discord.User, full=False):
@@ -61,7 +70,10 @@ class InfoCog(commands.Cog, name='Info'):
                        WHERE id = $1
                        AND changed_at < (CURRENT_DATE + $2::interval) ORDER BY changed_at;'''
             records = await self.bot.pool.fetch(query, user.id, datetime.timedelta(days=90))
-        names = [record['name'] for record in records]
+        if records:
+            names = [record['name'] for record in records if record['name']]
+        else:
+            return
         return ', '.join(self.remove_consec_dupes(names))
 
     async def get_nicknames(self, member: discord.Member, full=False):
@@ -78,7 +90,10 @@ class InfoCog(commands.Cog, name='Info'):
                        AND guild = $2
                        AND changed_at < (CURRENT_DATE + $3::interval) ORDER BY changed_at;'''
             records = await self.bot.pool.fetch(query, member.id, member.guild.id, datetime.timedelta(days=90))
-        names = [record['name'] for record in records]
+        if records:
+            names = [record['name'] for record in records if record['name']]
+        else:
+            return
         return ', '.join(self.remove_consec_dupes(names))
 
     @commands.command(name='serverinfo', aliases=['guildinfo'])
@@ -111,7 +126,7 @@ class InfoCog(commands.Cog, name='Info'):
         await ctx.send(embed=e)
 
     @commands.command()
-    async def userinfo(self, ctx, *, user: Union[CaseInsensitiveMember, CachedUserID] = None):
+    async def userinfo(self, ctx, *, user: Union[CaseInsensitiveMember, CachedUserID, discord.User] = None):
         user = user or ctx.author
         if user.color is discord.Color.default():
             color = bright_color()
